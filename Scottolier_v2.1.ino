@@ -101,7 +101,7 @@ void loop()
   Serial.print("\t\tPres: ");
   Serial.println(datos.presion);
 
-  if(Serial1.available)
+  if(Serial1.available())
   {
     Serial1.write(&datos, sizeof(datos));    
   }
