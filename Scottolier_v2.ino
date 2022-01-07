@@ -17,18 +17,29 @@
 
 int address1 = 0; //Direccion EEPROM "intervalo"
 int address2 = 5; //Direccion EEPROM "gota"
-int intervalo = 0; 
-int gota = 0;
+//int intervalo = 0; 
+//int gota = 0;
 
 const int offsetA = 1;
 
-int temperatura = 0;
-int humedad = 0;
-int presion = 0;
-int inyector = 0; //Variable trabajo de engrase
+//int temperatura = 0;
+//int humedad = 0;
+//int presion = 0;
+//int inyector = 0; //Variable trabajo de engrase
 
-int envioDeDatos[6] = {temperatura, humedad, presion, gota, intervalo, inyector}; //Array para el envio de datos por Serial1/Bluetooth
+//int envioDeDatos[6] = {temperatura, humedad, presion, gota, intervalo, inyector}; //Array para el envio de datos por Serial1/Bluetooth
 
+struct MyData 
+{
+   int temperatura;
+   int humedad;
+   int presion;
+   int gota;
+   int intervalo;
+   int inyector;
+};
+
+MyData datos;
 
 unsigned long prev_millis = 0;
 
@@ -78,21 +89,21 @@ void loop()
 
   accionamiento(); //Bombeo aceite
 
-  temperatura = bme.readTemperature();
-  humedad = bme.readHumidity();
-  presion = bme.readPressure() / 100;
-  intervalo = EEPROM.read(address1);  
-  gota = EEPROM.read(address2);
+  datos.temperatura = bme.readTemperature();
+  datos.humedad = bme.readHumidity();
+  datos.presion = bme.readPressure() / 100;
+  datos.intervalo = EEPROM.read(address1);  
+  datos.gota = EEPROM.read(address2);
   Serial.print("Temp: ");
-  Serial.print(temperatura);
+  Serial.print(datos.temperatura);
   Serial.print("\t\tHum: ");
-  Serial.print(humedad);
+  Serial.print(datos.humedad);
   Serial.print("\t\tPres: ");
-  Serial.println(presion);
+  Serial.println(datos.presion);
 
   if(Serial1.available)
   {
-    Serial1.write(envioDeDatos, 6);    
+    Serial1.write(&datos, sizeof(datos));    
   }
 
   if (!digitalRead(BUTTON_C)) //Cebado de circuito
@@ -107,10 +118,10 @@ void loop()
       display.display();
 
       motor1.drive(255,0);
-inyector = 1;
+      datos.inyector = 1;
     }
-motor1.brake();
-inyector = 0;
+    motor1.brake();
+    datos.inyector = 0;
   }    
 }
 
@@ -141,7 +152,7 @@ void ajuste()
         delay(100);
       }
 
-      if (intervalo != nuevoIntervalo)
+      if (datos.intervalo != nuevoIntervalo)
       {
         EEPROM.update(address1, nuevoIntervalo);
       }
@@ -173,7 +184,7 @@ void ajuste()
         delay(100);
       }
 
-      if (gota != nuevoGota)
+      if (datos.gota != nuevoGota)
       {
         EEPROM.update(address2, nuevoGota);
       }
@@ -188,30 +199,30 @@ void p_principal()
   display.setCursor(0, 8);
   display.setTextSize(1);
   display.print("Hu:");
-  display.print(humedad);
+  display.print(datos.humedad);
   display.setCursor(64, 8);
   display.print("Te:");
-  display.print(temperatura);
+  display.print(datos.temperatura);
   display.setCursor(0, 16);
   display.print("Pres:");
-  display.print(presion);
+  display.print(datos.presion);
   display.setCursor(64, 16);
   display.print("Int:");
-  display.print(intervalo);
+  display.print(datos.intervalo);
   display.setCursor(0, 24);
   display.print("Gota:");
-  display.print(gota);
+  display.print(datos.gota);
   display.display();
 }
 
 void accionamiento()
 {
-  if ((prev_millis + (intervalo * 1000)) >= millis)
+  if ((prev_millis + (datos.intervalo * 1000)) >= millis)
   {
     motor1.drive(255,gota);
-    inyector = 1;    
+    datos.inyector = 1;    
     motor1.brake();
-    inyector = 0;
+    datos.inyector = 0;
 
     prev_millis = millis;
   }
