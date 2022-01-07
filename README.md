@@ -8,3 +8,6 @@ Los componentes empleados seran:
 -Bomba preistaltica con motor DC 12V
 
 En la segunda fase se añadira un M5Stack Core2 para la visualizacion de datos y configuracion inalambrica mediante conexion bluetooth.
+
+V2: en principio funcionando, falta asignar pines y probar. (COMPILA)
+V2.1: se añade en envio de datos via bluetooth. (EN PROGRESO)
