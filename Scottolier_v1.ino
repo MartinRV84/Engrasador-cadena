@@ -1,31 +1,31 @@
 #include <SparkFun_TB6612.h>
-#include <Adafruit_GFX.h>
 #include <Adafruit_BME280.h>
 #include <Wire.h>
 #include <EEPROM.h>
 #include <Adafruit_SSD1306.h>
-#include <SPI.h>
 #include <Adafruit_Sensor.h>
 
 #define BUTTON_A  9 //Pusador "-"
 #define BUTTON_B  6 //Pulsador "+"
 #define BUTTON_C  5 //Pulsador "OK"
-#define AIN1 2
-#define AIN2 4
-#define PWMA 5
-#define STBY 9
+#define AIN1 10
+#define AIN2 11
+#define PWMA 12
+#define STBY 23
+
+#define ledPin 13
 
 int address1 = 0; //Direccion EEPROM "intervalo"
 int address2 = 5; //Direccion EEPROM "gota"
 int intervalo = 0; 
-int gota = 0;
+long gota = 0;
 
 const int offsetA = 1;
 
 int temperatura = 0;
 int humedad = 0;
 int presion = 0;
-int inyector = 0; //Variable trabajo de engrase
+bool inyector = false; //Variable trabajo de engrase
 
 unsigned long prev_millis = 0;
 
@@ -35,7 +35,6 @@ Motor motor1 = Motor(AIN1, AIN2, PWMA, offsetA, STBY);
 
 void setup()
 {
-  Serial.begin(9600); //Inicio puerto serial
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C); //Inicio LCD
   bme.begin(0x77, &Wire); //Inicio sensor
 
@@ -54,7 +53,6 @@ void setup()
 
   if (!bme.begin()) //Comprobacion de sensor
   {
-    Serial.println("Fallo en sensores"); 
     display.setTextSize(1);
     display.setTextColor(SSD1306_WHITE);
     display.setCursor(0, 0);
@@ -66,47 +64,35 @@ void setup()
 
 void loop()
 {
-  delay(100);
-
-  p_principal(); //Pantalla principal
-
-  ajuste(); //Pantalla de ajuste
-
-  accionamiento(); //Bombeo aceite
-
-  temperatura = bme.readTemperature();
+temperatura = bme.readTemperature();
   humedad = bme.readHumidity();
   presion = bme.readPressure() / 100;
   intervalo = EEPROM.read(address1);  
   gota = EEPROM.read(address2);
-  Serial.print("Temp: ");
-  Serial.print(temperatura);
-  Serial.print("\t\tHum: ");
-  Serial.print(humedad);
-  Serial.print("\t\tPres: ");
-  Serial.println(presion);
+  
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+  display.setCursor(0, 8);
+  display.setTextSize(1);
+  display.print("Hu:");
+  display.print(humedad);
+  display.setCursor(64, 8);
+  display.print("Te:");
+  display.print(temperatura);
+  display.setCursor(0, 16);
+  display.print("Pres:");
+  display.print(presion);
+  display.setCursor(64, 16);
+  display.print("Int:");
+  display.print(intervalo);
+  display.setCursor(0, 24);
+  display.print("Gota:");
+  display.print(gota);
+  display.setCursor(64, 24);
+  display.print("Inyector:");
+  display.print(inyector);
+  display.display();
 
-  if (!digitalRead(BUTTON_C)) //Cebado de circuito
-  {
-    while (digitalRead(!BUTTON_C))
-    {
-      display.clearDisplay();
-      display.setTextColor(WHITE);
-      display.setCursor(0, 0);
-      display.setTextSize(2);
-      display.print("CEBADO");
-      display.display();
-
-      motor1.drive(255,0);
-inyector = 1;
-    }
-motor1.brake();
-inyector = 0;
-  }    
-}
-
-void ajuste()
-{
   if (!digitalRead(BUTTON_A)) //Ajuste de intevalo entre goteo
   {
     int nuevoIntervalo = EEPROM.read(address1);
@@ -131,17 +117,17 @@ void ajuste()
         nuevoIntervalo = nuevoIntervalo + 1;
         delay(100);
       }
+    }
 
       if (intervalo != nuevoIntervalo)
       {
         EEPROM.update(address1, nuevoIntervalo);
       }
-    }
   }    
 
     if (!digitalRead(BUTTON_B)) //Ajuste del tiempo necesario para el bombeo de una gota
   {
-    int nuevoGota = EEPROM.read(address2);
+    long nuevoGota = EEPROM.read(address2);
 
     while (digitalRead(BUTTON_C))
     {
@@ -149,7 +135,7 @@ void ajuste()
       display.setTextColor(WHITE);
       display.setCursor(50, 10);
       display.setTextSize(3);
-      display.print(gota);
+      display.print(nuevoGota);
       display.display();
 
       if (!digitalRead(BUTTON_A))
@@ -163,47 +149,17 @@ void ajuste()
         nuevoGota = nuevoGota + 1;
         delay(100);
       }
+    }
 
       if (gota != nuevoGota)
       {
         EEPROM.update(address2, nuevoGota);
       }
-    }
   }    
-}
 
-void p_principal()
-{
-  display.clearDisplay();
-  display.setTextColor(WHITE);
-  display.setCursor(0, 8);
-  display.setTextSize(1);
-  display.print("Hu:");
-  display.print(humedad);
-  display.setCursor(64, 8);
-  display.print("Te:");
-  display.print(temperatura);
-  display.setCursor(0, 16);
-  display.print("Pres:");
-  display.print(presion);
-  display.setCursor(64, 16);
-  display.print("Int:");
-  display.print(intervalo);
-  display.setCursor(0, 24);
-  display.print("Gota:");
-  display.print(gota);
-  display.display();
-}
-
-void accionamiento()
-{
   if ((prev_millis + (intervalo * 1000)) >= millis)
   {
-    motor1.drive(255,gota);
-    inyector = 1;    
-    motor1.brake();
-    inyector = 0;
-
+    motor1.drive(255, gota);
     prev_millis = millis;
   }
 }
