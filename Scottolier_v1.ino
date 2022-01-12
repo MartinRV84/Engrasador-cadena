@@ -157,9 +157,9 @@ temperatura = bme.readTemperature();
       }
   }    
 
-  if ((prev_millis + (intervalo * 1000)) >= millis)
+  if ((prev_millis + (intervalo * 1000)) >= millis())
   {
     motor1.drive(255, gota);
-    prev_millis = millis;
+    prev_millis = millis();
   }
 }
