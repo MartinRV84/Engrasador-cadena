@@ -6,8 +6,10 @@ Los componentes empleados seran:
 -Modulo TB6612FNG
 -Modulo BME280
 -Bomba preistaltica con motor DC 12V
+-3 pulsadores
+-Resistencias
 
 En la segunda fase se añadira un M5Stack Core2 para la visualizacion de datos y configuracion inalambrica mediante conexion bluetooth.
 
-V2: en principio funcionando, falta asignar pines y probar. (COMPILA)
+V1: en principio funcionando (compila), falta probar y ver posibles errores.
 V2.1: se añade en envio de datos via bluetooth. (EN PROGRESO)
