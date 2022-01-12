@@ -1,11 +1,8 @@
 #include <SparkFun_TB6612.h>
-#include <Adafruit_GFX.h>
 #include <Adafruit_BME280.h>
 #include <Wire.h>
 #include <EEPROM.h>
 #include <Adafruit_SSD1306.h>
-#include <SPI.h>
-#include <Adafruit_Sensor.h>
 
 #define BUTTON_A  9 //Pusador "-"
 #define BUTTON_B  6 //Pulsador "+"
