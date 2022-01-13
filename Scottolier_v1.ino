@@ -17,13 +17,15 @@
 
 int address1 = 0; //Direccion EEPROM "intervalo"
 int address2 = 5; //Direccion EEPROM "gota"
-int intervalo = 0; 
-long gota = 0;
+int intervalo = 0;
+int nuevoIntervalo = 0;
+int gota = 0;
+int nuevoGota = 0;
 
 const int offsetA = 1;
 
-int temperatura = 0;
-int humedad = 0;
+float temperatura = 0;
+float humedad = 0;
 int presion = 0;
 bool inyector = false; //Variable trabajo de engrase
 
@@ -64,11 +66,11 @@ void setup()
 
 void loop()
 {
-temperatura = bme.readTemperature();
+  temperatura = bme.readTemperature();
   humedad = bme.readHumidity();
   presion = bme.readPressure() / 100;
-  intervalo = EEPROM.read(address1);  
-  gota = EEPROM.read(address2);
+  intervalo = EEPROM.get(address1, intervalo);  
+  gota = EEPROM.get(address2, gota);
   
   display.clearDisplay();
   display.setTextColor(WHITE);
@@ -95,7 +97,7 @@ temperatura = bme.readTemperature();
 
   if (!digitalRead(BUTTON_A)) //Ajuste de intevalo entre goteo
   {
-    int nuevoIntervalo = EEPROM.read(address1);
+    EEPROM.get(address1, nuevoIntervalo);
 
     while (digitalRead(BUTTON_C))
     {
@@ -121,13 +123,13 @@ temperatura = bme.readTemperature();
 
       if (intervalo != nuevoIntervalo)
       {
-        EEPROM.update(address1, nuevoIntervalo);
+        EEPROM.put(address1, nuevoIntervalo);
       }
   }    
 
     if (!digitalRead(BUTTON_B)) //Ajuste del tiempo necesario para el bombeo de una gota
   {
-    long nuevoGota = EEPROM.read(address2);
+    EEPROM.get(address2, nuevoGota);
 
     while (digitalRead(BUTTON_C))
     {
@@ -153,7 +155,7 @@ temperatura = bme.readTemperature();
 
       if (gota != nuevoGota)
       {
-        EEPROM.update(address2, nuevoGota);
+        EEPROM.put(address2, nuevoGota);
       }
   }    
 
